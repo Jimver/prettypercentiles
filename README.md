@@ -50,6 +50,15 @@ A dict which maps the above columns to labels in your plot. The key is the label
 
 A dict that combine several columns into one using a given function. The key is the label in the plot and the value is a list of 2 or more [tuples](<#`tuple`-of-`(csv-filename,-column-name,-preprocessing-function)`>)
 
+### `num_intervals`
+
+Number that determines how far into the nines you want to plot.
+For example: 3 means you will plot the following intervals:
+
+`[0-90, 90-99, 99-99.9]`
+
+So the higher the number, the closer to 100% you will plot.
+
 ## Output
 
 Running example config:
