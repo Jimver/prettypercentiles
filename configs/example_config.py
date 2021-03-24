@@ -22,61 +22,63 @@ Label to the left of the y axis
 y_axis_label = 'Latency (ms)'
 
 """
-String: file_name
-The plot image filename
-"""
-file_name = 'images/plot.png'
-
-"""
-Int: num_intervals
-Amount of intervals to display
-For example 0-90, 90-99, 99-99.9, 99.9-99.99 are the first four intervals and so on.
-Must be at least 1
-"""
-num_intervals = 4
-
-"""
-String: source_csv
-The data source csv filename
-The csv should consist of a header in the first line and data below it seperated by commas
-"""
-source_csv = 'data/example_data.csv'
-
-"""
 bool: y_log
 Whether to print the y axis on a log scale or not
 """
 y_log = False
 
 """
-Dict: column_map
-Where: Key = label in plot
-       Value = column name in csv OR tuple of column name and pre-processing function that takes a list and outputs a list
+String: file_name
+The output plot image filename (directories in the path must already exist otherwise it won't work)
 """
-column_map = {}
-# So column1 in the csv will have 'column 1' as the label in the legend
-column_map['column 1'] = 'column1'
-column_map['column 2'] = 'column2'
+file_name = 'images/plot.png'
+
+"""
+Int: num_intervals
+Amount of intervals to display
+0-90, 90-99, 99-99.9, 99.9-99.99 are the first four intervals.
+So the more intervals the futher into the nines you go.
+Must be at least 1
+"""
+num_intervals = 4
+
+"""
+tuple: (csv filename, column name, optional preprocessing function)
+Information that defines a column in a csv file and optionally a preprocessing function that it needs to go through.
+The csv should consist of a header in the first line which define column names and data below it
+"""
+source_csv = 'data/example_data.csv'
+# Take column1 in the csv file
+column1 = (source_csv, 'column1')
+column2 = (source_csv, 'column2')
 # Here we take the column nanosecond_times but preprocess it first using a custom function (see customfunctions.py)
-column_map['Millisecond times'] = ('nanosecond_times', convert_nanos_to_millis)
+millisecond_times = (source_csv, 'nanosecond_times', convert_nanos_to_millis)
+
+"""
+Dict: label_map
+Where: Key = label in plot
+       Value = tuple of (csv filename, column, and optionally preprocessing function)
+"""
+label_map = {}
+# So column1 will have label 'column 1' in the plot legend
+label_map['column 1'] = column1
+label_map['column 2'] = column2
+label_map['Millisecond times'] = millisecond_times
 
 
 """
 Dict: combined_columns
 Where: Key = label of combined value in plot
-       Value = tuple of (combination function, list of column names/tuples of (column name, preprocessing function))
+       Value = tuple of (combination function, list of tuples of (csv filename, column, and optionally preprocessing function))
 Note that the length of the columns in the list MUST be equal in order to properly combine them
 """
 combined_columns = {}
-# Combine column1 and column2 by summing their elements at the same row
-combined_columns['column 1+2'] = (sum, ['column1', 'column2'])
-# Here we take the max of column1 and the preprocessed nanosecond_times column
-combined_columns['column max(1,ms)'] = (
-    max,
-    ['column1', ('nanosecond_times', convert_nanos_to_millis)]
-)
+# Combine column1 and column2 by summing their elements at the same row, label will be 'column 1+2'
+combined_columns['column 1+2'] = (sum, [column1, column2])
+# Here we take the max of column1 and the preprocessed nanosecond_times column, label will be 'column max(1,ms)'
+combined_columns['column max(1,ms)'] = (max, [column1, millisecond_times])
 # You can also use custom combination functions (see customfunctions.py)
-combined_columns['column avg(1,2)'] = (avg, ['column1', 'column2'])
+combined_columns['column avg(1,2)'] = (avg, [column1, column2])
 
 
 """

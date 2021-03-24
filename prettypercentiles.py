@@ -55,19 +55,39 @@ def get_percentiles(latency_list, percentages):
     return perc
 
 
-def handle_preprocessing(value, columns):
+def get_from_csv(csv_file, column):
     """
-    Calls the nanos to millis and get_percentile function
+    Get column from csv file.
     Arguments:
-        value: Either the column name or tuple of (column name, preprocessing function)
-    Returns: If it is just the column name the column as a List, if it is a tuple it will return the preprocessed List of the column
+        csv_file: name of the csv file
+        column: column to extract
+    Returns: column as a List of floats
     """
-    if isinstance(value, tuple):
-        func = value[1]
-        column_name = value[0]
-        return func(columns[column_name])
-    else:
-        return columns[value]
+    result = []
+    # Source: https://stackoverflow.com/a/16503661
+    with open(csv_file) as f:
+        reader = csv.DictReader(f)  # read rows into a dictionary format
+        # read a row as {column1: value1, column2: value2,...}
+        for row in reader:
+            result.append(float(row[column]))
+    return result
+
+
+def handle_preprocessing(value):
+    """
+    Handles the preprocessing of a tuple(csv filename, column, preprocessing function)
+    Arguments:
+        value: tuple of (csv filename, column, preprocessing function)
+    Returns: A List of floats which represent the column in the csv file, 
+    if preprocessing function is given it will be run through that as well.
+    """
+    csv_file = value[0]
+    column_name = value[1]
+    result = get_from_csv(csv_file, column_name)
+    if len(value) > 2:
+        func = value[2]
+        result = func(result)
+    return result
 
 
 def main(args):
@@ -105,13 +125,12 @@ def main(args):
 
     # Get file names
     filename = config.file_name
-    source_csv = config.source_csv
 
     # Get line formats
     line_formats = config.label_line
 
     # Get mappings
-    column_map = config.column_map
+    column_map = config.label_map
     combined_columns = config.combined_columns
 
     # Dict where key = label, value = percentiles
@@ -120,26 +139,15 @@ def main(args):
     # each value in each column is appended to a list
     columns = defaultdict(list)
 
-    # Source: https://stackoverflow.com/a/16503661
-    with open(source_csv) as f:
-        reader = csv.DictReader(f)  # read rows into a dictionary format
-        # read a row as {column1: value1, column2: value2,...}
-        for row in reader:
-            for (k, v) in row.items():  # go over each column name and value
-                # append the value into the appropriate list
-                columns[k].append(float(v))
-                # based on column name k
-
     # Individual columns
     for label, value in column_map.items():
-        column = handle_preprocessing(value, columns)
+        column = handle_preprocessing(value)
         perc_map[label] = get_percentiles(column, np_sample_points)
 
     # Combined columns
     for label, pair in combined_columns.items():
         # Get list of latencies to combine
-        columns_list = [handle_preprocessing(
-            value, columns) for value in pair[1]]
+        columns_list = [handle_preprocessing(value) for value in pair[1]]
         # Combine the latencies and get percentiles
         func = pair[0]
         perc_map[label] = get_percentiles(
