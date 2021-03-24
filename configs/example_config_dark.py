@@ -1,4 +1,4 @@
-# This file serves as an example plot config
+# This file serves as an example plot config (with dark mode)
 
 # Import custom functions (see customfunctions.py)
 from customfunctions import *
@@ -7,7 +7,7 @@ from customfunctions import *
 String: title
 The title of the plot
 """
-title = 'Example distribution'
+title = 'Example title'
 
 """
 String: x_axis_label

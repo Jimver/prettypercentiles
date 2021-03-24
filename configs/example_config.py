@@ -7,7 +7,7 @@ from customfunctions import *
 String: title
 The title of the plot
 """
-title = 'Example distribution'
+title = 'Example title'
 
 """
 String: x_axis_label
