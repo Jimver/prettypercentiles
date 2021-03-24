@@ -78,7 +78,7 @@ def handle_preprocessing(value):
     Handles the preprocessing of a tuple(csv filename, column, preprocessing function)
     Arguments:
         value: tuple of (csv filename, column, preprocessing function)
-    Returns: A List of floats which represent the column in the csv file, 
+    Returns: A List of floats which represent the column in the csv file,
     if preprocessing function is given it will be run through that as well.
     """
     csv_file = value[0]
@@ -109,13 +109,15 @@ def main(args):
     plot_title = config.title
     x_axis_label = config.x_axis_label
     y_axis_label = config.y_axis_label
+    font_scale = config.font_scale
+    dark_mode = config.dark_mode
     y_log = config.y_log
 
     # Get number of intervals
     num_intervals = config.num_intervals
 
     # Get sample points at which to sample intervals
-    sample_points = [10.0, 30.0, 50.0, 60.0, 70.0, 80.0, 90.0]
+    sample_points = [15.0, 30.0, 50.0, 60.0, 70.0, 80.0, 90.0]
     total_sample_points = sample_points.copy()
     for i in range(1, num_intervals):
         final_point = total_sample_points[-1]
@@ -130,17 +132,14 @@ def main(args):
     line_formats = config.label_line
 
     # Get mappings
-    column_map = config.label_map
+    label_map = config.label_map
     combined_columns = config.combined_columns
 
     # Dict where key = label, value = percentiles
     perc_map = {}
 
-    # each value in each column is appended to a list
-    columns = defaultdict(list)
-
     # Individual columns
-    for label, value in column_map.items():
+    for label, value in label_map.items():
         column = handle_preprocessing(value)
         perc_map[label] = get_percentiles(column, np_sample_points)
 
@@ -154,13 +153,13 @@ def main(args):
             combine(func, *columns_list), np_sample_points)
 
     # Plot the percentiles
-    plot_percentiles_multiple(plot_title, perc_map, np_sample_points, filename,
-                              num_intervals, y_log, line_formats, x_axis_label, y_axis_label)
+    plot_percentiles_multiple(plot_title, perc_map, np_sample_points, filename, num_intervals,
+                              y_log, line_formats, x_axis_label, y_axis_label, font_scale, dark_mode)
 
     return
 
 
-def plot_percentiles_multiple(title, percentiles_map, percentages, filename, num_intervals, y_log, line_formats, x_axis_label, y_axis_label):
+def plot_percentiles_multiple(title, percentiles_map, percentages, filename, num_intervals, y_log, line_formats, x_axis_label, y_axis_label, font_scale, dark_mode):
     """
     Plot function for the given percentiles
     Adapted from https://stackoverflow.com/questions/42072734/percentile-distribution-graph
@@ -174,13 +173,37 @@ def plot_percentiles_multiple(title, percentiles_map, percentages, filename, num
         line_formats: Dict where key is label and value is tuple of (marker, linestyle, color) for plot
         x_axis_label: Label below x axis
         y_axis_label: Label to the left of y axis
+        font_scale: Scale of font, 1 is normal
+        dark_mode: Whether to use dark mode
     """
     # Reset sns before every plot
     sns.reset_defaults()
-    clear_bkgd = {'axes.facecolor': 'none', 'figure.facecolor': 'none'}
-    sns.set(style='ticks', context='notebook', palette="muted", rc=clear_bkgd)
+
+    clear_bkgd = {
+        'axes.facecolor': 'none',
+        'figure.facecolor': 'none'
+    }
+
+    # Dark mode
+    if dark_mode:
+        dark_text_color = 'white'
+
+        clear_bkgd['text.color'] = dark_text_color
+        clear_bkgd['axes.labelcolor'] = dark_text_color
+        clear_bkgd['xtick.color'] = dark_text_color
+        clear_bkgd['ytick.color'] = dark_text_color
+
+        sns.set(style='darkgrid', font_scale=font_scale,
+                palette="muted", rc=clear_bkgd)
+    else:
+        clear_bkgd = {'axes.facecolor': 'none', 'figure.facecolor': 'none'}
+        sns.set(style='ticks', font_scale=font_scale,
+                palette="muted", rc=clear_bkgd)
 
     x = percentages
+
+    # Increase by one to get last xtick included as well
+    num_intervals += 1
 
     # Number of intervals to display.
     # Later calculations add 2 to this number to pad it to align with the reversed axis
@@ -195,17 +218,17 @@ def plot_percentiles_multiple(title, percentiles_map, percentages, filename, num
     labels = [str(100 * v)[0:l] + "%" for v, l in zip(x_values, lengths)]
 
     fig, ax = plt.subplots()
-    sns.set(rc={'figure.figsize': (10, 5)})
+    # sns.set(rc={'figure.figsize': (10, 5)})
     # Set x axis to log scale
     ax.set_xscale('log')
     # Invert x axis
     plt.gca().invert_xaxis()
     # Labels have to be reversed because axis is reversed
-    ax.xaxis.set_ticklabels(labels[::-1], fontsize=16)
+    ax.xaxis.set_ticklabels(labels[::-1])
 
     # Cyclic iteraters for markers and linestyles
     markers = itertools.cycle(['.', ',', 'o', 'v', '^', '<', '>', '1', '2',
-                              '3', '4', 's', 'p', '*', 'h', 'H', '+', 'x', 'D', 'd', '|', '_'])
+                               '3', '4', 's', 'p', '*', 'h', 'H', '+', 'x', 'D', 'd', '|', '_'])
     linestyles = itertools.cycle(['-', '--', '-.', ':'])
 
     # Plot distribution with different markers and lines each time
@@ -220,30 +243,27 @@ def plot_percentiles_multiple(title, percentiles_map, percentages, filename, num
             ax.plot([100.0 - v for v in x], percentiles_map[key], marker=next(markers),
                     linestyle=next(linestyles), label=key, alpha=0.7)
 
-    # Set y labels
-    for label in ax.get_yticklabels():
-        label.set_fontsize(16)
-
     # Grid lines
     # Major lines (every 90%, 99%, 99.9%, etc.)
     ax.grid(True, linewidth=0.5, zorder=5)
+    # Minor lines (10%, 20%,..., 80%, 91%, 92%,...,98%, etc.)
     ax.grid(True, which='minor', linewidth=0.5,
-            linestyle=':')  # Minor lines (10%, 20%,..., 80%, 91%, 92%,...,98%, etc.)
+            linestyle=':')
 
     # Make y axis log scale
     if (y_log):
         ax.set_yscale('log')
 
     # Set y axis label
-    ax.set_ylabel(y_axis_label, fontsize=18)
+    ax.set_ylabel(y_axis_label)
     # Set x axis label
-    ax.set_xlabel(x_axis_label, fontsize=18)
+    ax.set_xlabel(x_axis_label)
     # Set title
-    ax.set_title(title, fontsize=22)
+    ax.set_title(title)
 
     # Put a legend to the right of the plot
     lg = ax.legend(loc='center left', bbox_to_anchor=(
-        1.0, 0.5), fontsize=14)
+        1.0, 0.5))
 
     sns.despine(fig=fig)
 

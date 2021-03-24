@@ -31,7 +31,7 @@ font_scale = 1.2
 bool: dark_mode
 Whether to use dark background and white text
 """
-dark_mode = False
+dark_mode = True
 
 """
 bool: y_log
@@ -43,7 +43,7 @@ y_log = False
 String: file_name
 The output plot image filename (directories in the path must already exist otherwise it won't work)
 """
-file_name = 'images/example_plot.png'
+file_name = 'images/example_plot_dark.png'
 
 """
 Int: num_intervals
