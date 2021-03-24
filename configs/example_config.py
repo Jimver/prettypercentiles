@@ -33,7 +33,7 @@ Amount of intervals to display
 For example 0-90, 90-99, 99-99.9, 99.9-99.99 are the first four intervals and so on.
 Must be at least 1
 """
-num_intervals = 3
+num_intervals = 4
 
 """
 String: source_csv

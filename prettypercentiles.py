@@ -67,8 +67,6 @@ def handle_preprocessing(value, columns):
         column_name = value[0]
         return func(columns[column_name])
     else:
-        print(type(value))
-        print(value)
         return columns[value]
 
 
