@@ -59,6 +59,10 @@ For example: 3 means you will plot the following intervals:
 
 So the higher the number, the closer to 100% you will plot.
 
+### `font_scale`
+
+Float that increases/decreases font size. 1.0 is normal size. For example presentations usually have higher font size compared to papers.
+
 ## Output
 
 Running example config:
