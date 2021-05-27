@@ -42,6 +42,10 @@ There are comments for each setting, the most important ones are these:
 
 These define where and which column to get and an optional preprocessing function to run it through
 
+### `hgrm_map`
+
+A dict which maps the above columns to labels in your plot. The key is the label in the plot and the value is the file name to the hdrhistogram output.
+
 ### `label_map`
 
 A dict which maps the above columns to labels in your plot. The key is the label in the plot and the value is the [tuple](<#`tuple`-of-`(csv-filename,-column-name,-preprocessing-function)`>)
@@ -49,6 +53,8 @@ A dict which maps the above columns to labels in your plot. The key is the label
 ### `combined_columns`
 
 A dict that combine several columns into one using a given function. The key is the label in the plot and the value is a list of 2 or more [tuples](<#`tuple`-of-`(csv-filename,-column-name,-preprocessing-function)`>)
+
+Note that the hgrm labels cannot be combined as they contain the percentiles and not the latencies.
 
 ### `num_intervals`
 
