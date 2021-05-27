@@ -71,6 +71,14 @@ millisecond_times = (other_source_csv, 'nanosecond_times',
                      convert_nanos_to_millis)
 
 """
+Dict: hgrm_map
+Where: Key = label in plot
+       Value = File name of .hgrm file (output from hdrhistogram tool)
+"""
+hgrm_map = {}
+hgrm_map['hgrm latencies'] = "data/hdrhistogram_example.hgrm"
+
+"""
 Dict: label_map
 Where: Key = label in plot
        Value = tuple of (csv filename, column, and optionally preprocessing function)

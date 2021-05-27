@@ -71,6 +71,14 @@ millisecond_times = (other_source_csv, 'nanosecond_times',
                      convert_nanos_to_millis)
 
 """
+Dict: hgrm_map
+Where: Key = label in plot
+       Value = File name of .hgrm file (output from hdrhistogram tool)
+"""
+hgrm_map = {}
+hgrm_map['hgrm latencies'] = "data/hdrhistogram_example.hgrm"
+
+"""
 Dict: label_map
 Where: Key = label in plot
        Value = tuple of (csv filename, column, and optionally preprocessing function)
@@ -86,7 +94,9 @@ label_map['Millisecond times'] = millisecond_times
 Dict: combined_columns
 Where: Key = label of combined value in plot
        Value = tuple of (combination function, list of tuples of (csv filename, column, and optionally preprocessing function))
-Note that the length of the columns in the list MUST be equal in order to properly combine them
+NOTE: 
+- The length of the columns in the list MUST be equal in order to properly combine them
+- The .hgrm files are not supported for combining as they already contain the percentiles!
 """
 combined_columns = {}
 # Combine column1 and column2 by summing their elements at the same row, label will be 'column 1+2'

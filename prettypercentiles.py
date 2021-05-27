@@ -7,7 +7,7 @@ import seaborn as sns
 import itertools
 import importlib
 import sys
-from collections import defaultdict
+from hdr_parser import parse_hgrm
 from customfunctions import *
 
 
@@ -138,35 +138,51 @@ def main(args):
     # Dict where key = label, value = percentiles
     perc_map = {}
 
-    # Individual columns
-    for label, value in label_map.items():
-        column = handle_preprocessing(value)
-        perc_map[label] = get_percentiles(column, np_sample_points)
+    percentage_map = {}
 
-    # Combined columns
-    for label, pair in combined_columns.items():
-        # Get list of latencies to combine
-        columns_list = [handle_preprocessing(value) for value in pair[1]]
-        # Combine the latencies and get percentiles
-        func = pair[0]
-        perc_map[label] = get_percentiles(
-            combine(func, *columns_list), np_sample_points)
+    try:
+        # Individual columns
+        for label, value in label_map.items():
+            column = handle_preprocessing(value)
+            perc_map[label] = get_percentiles(column, np_sample_points)
+            percentage_map[label] = np_sample_points
+
+        # Combined columns
+        for label, pair in combined_columns.items():
+            # Get list of latencies to combine
+            columns_list = [handle_preprocessing(value) for value in pair[1]]
+            # Combine the latencies and get percentiles
+            func = pair[0]
+            perc_map[label] = get_percentiles(
+                combine(func, *columns_list), np_sample_points)
+            percentage_map[label] = np_sample_points
+    except:
+        pass
+
+    try:
+        hgrm_columns = config.hgrm_map
+        for label, hgrm_filename in hgrm_columns.items():
+            (latencies, percentiles) = parse_hgrm(hgrm_filename)
+            perc_map[label] = latencies
+            percentage_map[label] = percentiles
+    except:
+        pass
 
     # Plot the percentiles
-    plot_percentiles_multiple(plot_title, perc_map, np_sample_points, filename, num_intervals,
+    plot_percentiles_multiple(plot_title, perc_map, percentage_map, filename, num_intervals,
                               y_log, line_formats, x_axis_label, y_axis_label, font_scale, dark_mode)
 
     return
 
 
-def plot_percentiles_multiple(title, percentiles_map, percentages, filename, num_intervals, y_log, line_formats, x_axis_label, y_axis_label, font_scale, dark_mode):
+def plot_percentiles_multiple(title, percentiles_map, percentages_map, filename, num_intervals, y_log, line_formats, x_axis_label, y_axis_label, font_scale, dark_mode):
     """
     Plot function for the given percentiles
     Adapted from https://stackoverflow.com/questions/42072734/percentile-distribution-graph
     Arguments:
         title: Title of the plot
         percentiles_map: Dict where key is label and value are percentiles
-        percentages: The percentages used
+        percentages_map: Dict where key is label and value list of percentages used
         filename: The destination file name of the output image
         num_intervals: The number of intervals to display
         y_log: True will display y axis on log scale, False will use linear scale
@@ -199,8 +215,6 @@ def plot_percentiles_multiple(title, percentiles_map, percentages, filename, num
         clear_bkgd = {'axes.facecolor': 'none', 'figure.facecolor': 'none'}
         sns.set(style='ticks', font_scale=font_scale,
                 palette="muted", rc=clear_bkgd)
-
-    x = percentages
 
     # Increase by one to get last xtick included as well
     num_intervals += 1
@@ -237,10 +251,10 @@ def plot_percentiles_multiple(title, percentiles_map, percentages, filename, num
             marker = line_formats[key][0]
             linestyle = line_formats[key][1]
             color = line_formats[key][2]
-            ax.plot([100.0 - v for v in x], percentiles_map[key], marker=marker,
+            ax.plot([100.0 - v for v in percentages_map[key]], percentiles_map[key], marker=marker,
                     linestyle=linestyle, color=color, label=key, alpha=0.7)
         else:
-            ax.plot([100.0 - v for v in x], percentiles_map[key], marker=next(markers),
+            ax.plot([100.0 - v for v in percentages_map[key]], percentiles_map[key], marker=next(markers),
                     linestyle=next(linestyles), label=key, alpha=0.7)
 
     # Grid lines
